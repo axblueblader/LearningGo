@@ -15,3 +15,6 @@
 # SRC and BIN folder
 ./bin
 ./src
+bin/
+src/
+hello/
