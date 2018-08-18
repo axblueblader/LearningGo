@@ -4,28 +4,58 @@ import (
 	"fmt"
 )
 
-type Pizza struct {
+type Pizza interface {
+	Describe(Pz Pizza)
+	SetName(name string)
+	GetName() string
+}
+
+type VietnamesePizza struct {
+	Name    string
+	EggType string
+}
+
+func (pz *VietnamesePizza) Describe(Pz Pizza) {
+	fmt.Printf("Different pizza type: %s with a different member: %s\n",
+		pz.Name,
+		pz.EggType)
+}
+
+func (pz *VietnamesePizza) SetName(name string) {
+	pz.Name = name
+}
+
+func (pz *VietnamesePizza) GetName() string {
+	return pz.Name
+}
+
+type ItalianPizza struct {
 	Name string
 }
 
-type IPizza interface {
-	Describe(func(pz *Pizza)) func(pz *Pizza)
+func (pz *ItalianPizza) Describe(Pz Pizza) {
+	fmt.Printf("My pizza type: %s\n", pz.Name)
 }
 
-func (pizza Pizza) Describe() func(pz *Pizza) {
-	return func(pz *Pizza) {
-		pz = &pizza
-		fmt.Printf("Pizza name: %s\n", pizza.Name)
-	}
+func (pz *ItalianPizza) SetName(name string) {
+	pz.Name = name
+}
+
+func (pz *ItalianPizza) GetName() string {
+	return pz.Name
+}
+
+type Decorator interface {
+	Decorate(func(pz Pizza)) func(pz Pizza)
 }
 
 type BehaviorDecorator struct{}
 
-func (d BehaviorDecorator) Describe(f func(pz *Pizza)) func(pz *Pizza) {
-	return func(pz *Pizza) {
+func (d BehaviorDecorator) Decorate(f func(pz Pizza)) func(pz Pizza) {
+	return func(pz Pizza) {
 		f(pz)
-		pz.Name = "Behavior Name"
-		fmt.Printf("I changed pizza's name to: %s\n", pz.Name)
+		pz.SetName("Behavior Name")
+		fmt.Printf("I changed pizza's name to: %s\n", pz.GetName())
 	}
 }
 
@@ -33,18 +63,21 @@ type StateDecorator struct {
 	hot string
 }
 
-func (stateDecorator StateDecorator) Describe(f func(pz *Pizza)) func(pz *Pizza) {
-	return func(pz *Pizza) {
+func (stateDecorator StateDecorator) Decorate(f func(pz Pizza)) func(pz Pizza) {
+	return func(pz Pizza) {
 		f(pz)
-		fmt.Printf("Added hot string: %s\n", stateDecorator.hot)
+		fmt.Printf("Added hot string: %s to %s\n", stateDecorator.hot, pz.GetName())
 	}
 }
 
 func main() {
 	fmt.Println("Decorator Pattern Demo")
-	pizza := Pizza{Name: "Original Name"}
-	pizza.Describe()(&pizza)
+	pizza := ItalianPizza{Name: "Original Itatalian Name"}
 	newBehavior := BehaviorDecorator{}
 	newState := StateDecorator{hot: "so hot"}
-	newBehavior.Describe(newState.Describe(pizza.Describe()))(&pizza)
+	decorator := newBehavior.Decorate(newState.Decorate(pizza.Describe))
+	decorator(&pizza)
+	vietPizza := VietnamesePizza{Name: "Banh trang nuong", EggType: "Trung cut"}
+	decorator = newState.Decorate(vietPizza.Describe)
+	decorator(&vietPizza)
 }
