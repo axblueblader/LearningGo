@@ -45,42 +45,58 @@ type RockPaperScissorGame struct {
 func main() {
 	var newGame RockPaperScissorGame
 	fmt.Println("Welcome to program")
-	newGame.initializePlayers()
-	mainGameLoop(newGame)
+	initializePlayers(&newGame)
+	mainGameLoop(&newGame)
 	fmt.Println("Thanks for playing")
 }
 
-func (theGame *RockPaperScissorGame) initializePlayers() {
-	fmt.Println("Enter your name: ")
+func initializePlayers(theGame *RockPaperScissorGame) {
 	var playerName string
-	_, err := fmt.Scanf("%s", &playerName)
-	if err != nil {
-		fmt.Println("An error occured, please re-enter:")
+	for {
+		fmt.Println("Enter your name: ")
+		_, err := fmt.Scanf("%s", &playerName)
+		if err != nil {
+			fmt.Println("An error occured, please re-enter:")
+			continue
+		}
+		break
 	}
 	theGame.theHuman = PlayerModel{name: playerName, choice: 0}
 	theGame.theBot = PlayerModel{name: "BOT", choice: 0}
 }
 
-func mainGameLoop(theGame RockPaperScissorGame) {
+type errorString struct {
+	s string
+}
+
+func (e *errorString) Error() string {
+	return e.s
+}
+
+func getInputFromUser() (int, error) {
 	var playerChoice int
+	fmt.Printf("Choose [%d]-rock,[%d]-paper,[%d]-scissor,[%d]-exit: ",
+		RockCode, PaperCode, ScissorCode, ExitCode)
+	_, err := fmt.Scanf("%d", &playerChoice)
+	if err != nil || invalidPlayerChoice(playerChoice) {
+		return 0, &errorString{s: "Input error"}
+	}
+	return playerChoice, nil
+}
+
+func mainGameLoop(theGame *RockPaperScissorGame) {
 	for {
-		fmt.Printf("Choose [%d]-rock,[%d]-paper,[%d]-scissor,[%d]-exit: ",
-			RockCode, PaperCode, ScissorCode, ExitCode)
-		_, err := fmt.Scanf("%d", &playerChoice)
+		playerChoice, err := getInputFromUser()
 		if err != nil {
-			fmt.Println("An error occured, please re-enter")
+			fmt.Printf("%s, please re-enter\n", err.Error())
 			continue
 		}
 		if playerChoice == ExitCode {
 			break
-		}
-		if invalidPlayerChoice(playerChoice) {
-			fmt.Println("Invalid choice, please re-enter")
-			continue
 		} else {
-			theGame.run(playerChoice)
-			showChoices(theGame)
-			showResults(theGame)
+			theGame.Run(playerChoice)
+			showChoices(*theGame)
+			showResults(*theGame)
 		}
 	}
 }
@@ -107,7 +123,8 @@ func generateRandomChoice() int {
 	return randomer.Intn(2)
 }
 
-func (theGame *RockPaperScissorGame) run(playerChoice int) {
+// Run : set choices and set winner
+func (theGame *RockPaperScissorGame) Run(playerChoice int) {
 	theGame.theHuman.setChoice(playerChoice)
 	theGame.theBot.setChoice(generateRandomChoice())
 	theGame.setWinner(getHumanResult(theGame.theHuman, theGame.theBot))
