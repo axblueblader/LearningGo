@@ -156,7 +156,7 @@ func (theGame *RockPaperScissorGame) setWinner(roundResult int) {
 
 func showChoices(theGame RockPaperScissorGame) {
 	fmt.Printf("%s's choice: %s | Bot's choice: %s\n",
-		theGame.theHuman.name,
+		theGame.theHuman.name, // need to call Get method here
 		weaponName[theGame.theHuman.choice],
 		weaponName[theGame.theBot.choice])
 }
