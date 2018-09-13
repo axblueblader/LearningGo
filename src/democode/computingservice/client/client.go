@@ -88,21 +88,43 @@ func callRPC(operands, routekey string, res chan int) {
 	return
 }
 
+func validateRequest(args []string) {
+	operators := [...]string{"add", "minus"}
+	if len(args) != 4 {
+		panic("Invalid request failed, missing arguments")
+	}
+	found := false
+	for _, v := range operators {
+		if args[1] == v {
+			found = true
+		}
+	}
+	if found == false {
+		panic("Invalid request failed, wrong arguments")
+	}
+	return
+}
+
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
+
+	validateRequest(os.Args)
 
 	operands := bodyFrom(os.Args)
 	routekey := severityFrom(os.Args)
 	result := make(chan int)
 
 	log.Printf(" [x] Requesting %s on %s", routekey, operands)
-	timeout := time.After(8 * time.Second)
 	go callRPC(operands, routekey, result)
+
+	timeout := time.After(11 * time.Second)
 	var res int
+
 waitResponse:
 	for {
 		select {
 		case res = <-result:
+			log.Printf(" [.] Got %d", res)
 			break waitResponse
 		case <-timeout:
 			log.Printf(" [.] Process took too long, connection timed out")
@@ -112,8 +134,6 @@ waitResponse:
 			time.Sleep(2 * time.Second)
 		}
 	}
-
-	log.Printf(" [.] Got %d", res)
 }
 
 func bodyFrom(args []string) string {

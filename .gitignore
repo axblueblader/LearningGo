@@ -12,8 +12,12 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# SRC and BIN folder
-./bin
-./src
+# SRC and BIN and PKG folder
 bin/
-src/
+src/github.com/
+src/golang.org/
+
+# Ignore everything except go source files
+**/*
+!**/*.go
+!**/
